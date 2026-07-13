@@ -61,8 +61,8 @@ btnDownloadZip.addEventListener('click', async () => {
         const cidadeLimpa = nota.cidade.replace(/[^a-zA-Z0-9 -]/g, '').trim();
         const bmLimpo = nota.bm.replace(/\//g, '-');
         
-        // Nome: CIDADE - BM.ext
-        zip.file(`${cidadeLimpa} - BM ${bmLimpo}.${ext}`, blob);
+        const fileName = nota.nomeOriginal || `${cidadeLimpa} - BM ${bmLimpo}.${ext}`;
+        zip.file(fileName, blob);
         count++;
       } catch (e) {
         console.error('Erro baixar:', nota.cidade, e);
@@ -286,6 +286,7 @@ fileInputAnexo.addEventListener('change', async (e) => {
     await setDoc(doc(db, `notas_${currentBmId}`, nota.docId), {
       emitida: true,
       anexoUrl: url,
+      nomeOriginal: file.name,
       updatedAt: new Date().toISOString()
     }, { merge: true });
     
