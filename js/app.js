@@ -1,4 +1,4 @@
-import { db, storage, doc, setDoc, onSnapshot, collection, getDocs, ref, uploadBytes, getDownloadURL } from './firebase-config.js';
+import { db, storage, doc, setDoc, deleteDoc, onSnapshot, collection, getDocs, ref, uploadBytes, getDownloadURL } from './firebase-config.js';
 
 let notasData = [];
 let unsubscribe = null;
@@ -92,15 +92,36 @@ async function loadDashboard() {
     bms.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
 
     bmList.innerHTML = bms.map(b => `
-      <div class="bm-card" onclick="openBM('${b.id}', '${b.bm}', '${b.periodo}')">
-        <h3>BM: ${b.bm}</h3>
-        <p>Período: ${b.periodo}</p>
+      <div class="bm-card">
+        <div class="bm-card-content" onclick="openBM('${b.id}', '${b.bm}', '${b.periodo}')">
+          <h3>BM: ${b.bm}</h3>
+          <p>Período: ${b.periodo}</p>
+        </div>
+        <button class="btn-delete-bm" onclick="deleteBM('${b.id}')">🗑️ Excluir</button>
       </div>
     `).join('');
   } catch (err) {
     bmList.innerHTML = `<p>Erro ao carregar BMs: ${err.message}</p>`;
   }
 }
+
+window.deleteBM = async (bmId) => {
+  if (!confirm('Tem certeza que deseja excluir este Boletim de Medição? Isso apagará todas as cidades dele.')) return;
+  try {
+    // Busca todas as notas deste BM para excluí-las
+    const snap = await getDocs(collection(db, `notas_${bmId}`));
+    const deletes = [];
+    snap.forEach(d => deletes.push(deleteDoc(doc(db, `notas_${bmId}`, d.id))));
+    await Promise.all(deletes);
+    
+    // Exclui o documento do BM
+    await deleteDoc(doc(db, 'bms', bmId));
+    
+    loadDashboard();
+  } catch (e) {
+    alert('Erro ao excluir: ' + e.message);
+  }
+};
 
 window.openBM = (bmId, bmText, periodoText) => {
   currentBmId = bmId;
