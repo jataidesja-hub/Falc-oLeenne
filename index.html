@@ -47,34 +47,59 @@
     <!-- Dashboard -->
     <section id="dashboard-section">
       <div class="flex items-center justify-between mb-8">
-        <h2 class="text-2xl font-semibold text-white tracking-tight">Boletins de Medição</h2>
-        <button id="btnNovaPlanilha" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-violet-500/20 active:scale-95 flex items-center gap-2">
+        <h2 class="text-3xl font-bold text-white tracking-tight">Boletins de Medição</h2>
+        <button id="btnNovaPlanilha" class="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-all duration-200 transform active:scale-95 flex items-center gap-2 shadow-lg shadow-violet-500/20">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
           Nova Planilha
         </button>
-        <input type="file" id="fileInputPlanilha" accept=".xlsx,.xls" class="hidden" />
       </div>
-      <div id="bmList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <!-- Loading ou lista de BMs -->
-      </div>
+      <div id="bmList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
     </section>
 
     <!-- Main View (Cidades) -->
     <section id="main-section" class="hidden">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-        <h2 class="text-2xl font-semibold text-white tracking-tight">Notas por Cidade</h2>
-        <div class="flex flex-wrap items-center gap-3">
-          <button id="btnDownloadZip" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-violet-500/20 active:scale-95 flex items-center gap-2">
+        <h2 id="mainSectionTitle" class="text-2xl font-semibold text-white tracking-tight">Notas por Cidade</h2>
+        <div class="flex flex-wrap gap-3">
+          <button id="btnViewResumo" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 border border-white/10 shadow-lg shadow-black/20">
+            <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span id="btnViewResumoText">Resumo BM</span>
+          </button>
+          <button id="btnDownloadZip" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-violet-500/20">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             Baixar Anexos
           </button>
-          <button id="filterPendentes" class="px-4 py-2 bg-transparent border border-zinc-700 text-zinc-300 hover:bg-zinc-900 text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span>Só Pendentes</span>
+          <button id="filterPendentes" class="px-4 py-2 bg-transparent border border-white/10 hover:bg-white/5 text-zinc-300 text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Só Pendentes
           </button>
         </div>
       </div>
       <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+
+      <!-- Tabela de Resumo (Oculta por padrão) -->
+      <div id="resumo-container" class="hidden overflow-hidden rounded-2xl border border-white/5 bg-zinc-900/50 backdrop-blur-md">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-zinc-400">
+            <thead class="bg-black/20 text-xs uppercase text-zinc-500 border-b border-white/5">
+              <tr>
+                <th scope="col" class="px-6 py-4 font-medium tracking-wider">Cidade / Tipo</th>
+                <th scope="col" class="px-6 py-4 font-medium tracking-wider text-right">Passagem</th>
+                <th scope="col" class="px-6 py-4 font-medium tracking-wider text-right">Alimentação</th>
+                <th scope="col" class="px-6 py-4 font-medium tracking-wider text-right">Valor Nota Fiscal</th>
+              </tr>
+            </thead>
+            <tbody id="resumo-tbody" class="divide-y divide-white/5">
+              <!-- linhas inseridas por JS -->
+            </tbody>
+            <tfoot class="bg-violet-500/5 border-t border-violet-500/10">
+              <tr id="resumo-tfoot" class="font-bold text-zinc-200">
+                <!-- totais inseridos por JS -->
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
     </section>
   </main>
 

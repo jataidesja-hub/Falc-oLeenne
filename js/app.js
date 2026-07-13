@@ -23,12 +23,41 @@ const fileInputAnexo = document.getElementById('fileInputAnexo');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const btnDownloadZip = document.getElementById('btnDownloadZip');
 
+const btnViewResumo = document.getElementById('btnViewResumo');
+const btnViewResumoText = document.getElementById('btnViewResumoText');
+const resumoContainer = document.getElementById('resumo-container');
+const resumoTbody = document.getElementById('resumo-tbody');
+const resumoTfoot = document.getElementById('resumo-tfoot');
+const mainSectionTitle = document.getElementById('mainSectionTitle');
+
+let viewMode = 'cards';
+
 btnNovaPlanilha.addEventListener('click', () => fileInputPlanilha.click());
 btnVoltar.addEventListener('click', loadDashboard);
 filterPendentes.addEventListener('click', () => {
   showOnlyPendentes = !showOnlyPendentes;
   filterPendentes.textContent = showOnlyPendentes ? '📋 Mostrar Todas' : '⏳ Só Pendentes';
-  renderCards();
+  if (viewMode === 'cards') renderCards();
+});
+
+btnViewResumo.addEventListener('click', () => {
+  viewMode = viewMode === 'cards' ? 'resumo' : 'cards';
+  
+  if (viewMode === 'resumo') {
+    grid.classList.add('hidden');
+    resumoContainer.classList.remove('hidden');
+    filterPendentes.classList.add('hidden');
+    btnViewResumoText.textContent = 'Ver Cards';
+    mainSectionTitle.textContent = 'Resumo do BM';
+    renderResumo();
+  } else {
+    grid.classList.remove('hidden');
+    resumoContainer.classList.add('hidden');
+    filterPendentes.classList.remove('hidden');
+    btnViewResumoText.textContent = 'Resumo BM';
+    mainSectionTitle.textContent = 'Notas por Cidade';
+    renderCards();
+  }
 });
 
 btnDownloadZip.addEventListener('click', async () => {
@@ -188,6 +217,13 @@ window.deleteBM = async (bmId) => {
 
 window.openBM = (bmId, bmText, periodoText) => {
   currentBmId = bmId;
+  viewMode = 'cards';
+  grid.classList.remove('hidden');
+  resumoContainer.classList.add('hidden');
+  filterPendentes.classList.remove('hidden');
+  btnViewResumoText.textContent = 'Resumo BM';
+  mainSectionTitle.textContent = 'Notas por Cidade';
+
   dashSection.classList.add('hidden');
   mainSection.classList.remove('hidden');
   headerMeta.classList.remove('hidden');
@@ -200,7 +236,11 @@ window.openBM = (bmId, bmText, periodoText) => {
     notasData = [];
     snap.forEach(d => notasData.push({ docId: d.id, ...d.data() }));
     notasData.sort((a,b) => a.cidade.localeCompare(b.cidade));
-    renderCards();
+    if (viewMode === 'cards') {
+      renderCards();
+    } else {
+      renderResumo();
+    }
   });
 };
 
@@ -331,6 +371,74 @@ function renderCards() {
       return `<div class="bg-red-900/50 p-4 rounded-xl text-red-200 border border-red-500/30">Erro na nota ${nota.cidade || 'desconhecida'}: ${e.message}</div>`;
     }
   }).join('');
+}
+
+function renderResumo() {
+  const agrupado = {};
+  
+  let totalPassagem = 0;
+  let totalAlimentacao = 0;
+  let totalNf = 0;
+
+  notasData.forEach(nota => {
+    const isReajuste = nota.cidade.toUpperCase().includes('REAJUSTE') || nota.cidade.toUpperCase().includes('(R)');
+    const tipo = isReajuste ? 'Reajuste' : 'Normal';
+    
+    let nomeCidade = nota.cidade.replace(/\s*\(R\)\s*/i, '').replace(/\s*REAJUSTE\s*/i, '').trim();
+    if (!nomeCidade) nomeCidade = 'Desconhecida';
+    
+    const key = `${nomeCidade}_${tipo}`;
+    
+    if (!agrupado[key]) {
+      agrupado[key] = {
+        cidade: nomeCidade,
+        tipo: tipo,
+        passagem: 0,
+        alimentacao: 0,
+        valorNotaFiscal: 0
+      };
+    }
+    
+    const pass = Number(nota.passagem) || 0;
+    const alim = Number(nota.alimentacao) || 0;
+    const vnf = Number(nota.valorNotaFiscal) || 0;
+    
+    agrupado[key].passagem += pass;
+    agrupado[key].alimentacao += alim;
+    agrupado[key].valorNotaFiscal += vnf;
+    
+    totalPassagem += pass;
+    totalAlimentacao += alim;
+    totalNf += vnf;
+  });
+
+  const linhas = Object.values(agrupado).sort((a, b) => {
+    if (a.cidade === b.cidade) return a.tipo.localeCompare(b.tipo);
+    return a.cidade.localeCompare(b.cidade);
+  });
+  
+  resumoTbody.innerHTML = linhas.map(row => `
+    <tr class="hover:bg-white/[0.02] transition-colors">
+      <td class="px-6 py-4 whitespace-nowrap">
+        <div class="font-medium text-zinc-300 uppercase">${row.cidade.split(' ')[0]}</div>
+        <div class="text-[10px] uppercase font-bold tracking-wider mt-1 ${row.tipo === 'Reajuste' ? 'text-amber-500' : 'text-violet-400'}">${row.tipo}</div>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400">R$ ${formatBRL(row.passagem)}</td>
+      <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400">R$ ${formatBRL(row.alimentacao)}</td>
+      <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-sm font-bold text-emerald-400">R$ ${formatBRL(row.valorNotaFiscal)}</td>
+    </tr>
+  `).join('');
+  
+  if (linhas.length === 0) {
+    resumoTbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-zinc-500">Nenhum dado encontrado.</td></tr>`;
+  }
+  
+  resumoTfoot.innerHTML = `
+    <td class="px-6 py-4 whitespace-nowrap uppercase tracking-wider text-xs">Total Geral</td>
+    <td class="px-6 py-4 whitespace-nowrap text-right font-mono">R$ ${formatBRL(totalPassagem)}</td>
+    <td class="px-6 py-4 whitespace-nowrap text-right font-mono">R$ ${formatBRL(totalAlimentacao)}</td>
+    <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-emerald-400">R$ ${formatBRL(totalNf)}</td>
+  `;
 }
 
 window.iniciarEmissao = (docId) => {
