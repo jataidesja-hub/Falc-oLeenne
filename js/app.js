@@ -204,6 +204,12 @@ window.openBM = (bmId, bmText, periodoText) => {
   });
 };
 
+function formatDescription(text) {
+  if (!text) return '';
+  const str = String(text);
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
 function formatBRL(n) {
   return (n||0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -213,112 +219,119 @@ function renderCards() {
   const emitidas = notasData.filter(n => n.emitida).length;
   statsEl.textContent = `${emitidas} de ${notasData.length} emitidas`;
 
-  grid.innerHTML = lista.map((nota, i) => `
-    <div class="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-colors flex flex-col ${nota.emitida ? 'opacity-70 grayscale-[20%]' : ''}">
-      
-      <div class="p-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-bold text-violet-400 uppercase tracking-wider">${nota.cidade.split(' ')[0]} ${nota.cidade.includes('REAJUSTE')?'<span class="text-amber-500">(R)</span>':''}</span>
-        </div>
-        ${nota.emitida 
-          ? '<span class="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-wide uppercase">Emitida</span>' 
-          : '<span class="text-xs text-zinc-500 font-medium">BM: '+nota.bm+'</span>'}
-      </div>
-
-      <div class="p-6 flex-1 flex flex-col gap-5">
-        
-        <div class="space-y-3">
-          ${nota.referencia ? `
-            <div>
-              <p class="text-xs text-zinc-400 leading-relaxed line-clamp-3">${formatDescription(nota.referencia)}</p>
-              <button class="btn-ver-mais text-[10px] font-medium text-violet-400 hover:text-violet-300 mt-1 uppercase tracking-wider">Ler mais</button>
+  grid.innerHTML = lista.map((nota, i) => {
+    try {
+      return `
+        <div class="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-colors flex flex-col ${nota.emitida ? 'opacity-70 grayscale-[20%]' : ''}">
+          
+          <div class="p-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold text-violet-400 uppercase tracking-wider">${(nota.cidade || 'Sem Cidade').split(' ')[0]} ${(nota.cidade || '').includes('REAJUSTE')?'<span class="text-amber-500">(R)</span>':''}</span>
             </div>
-          ` : ''}
-          ${nota.in ? `<p class="text-[11px] font-medium text-amber-500/80 leading-snug">${formatDescription(nota.in)}</p>` : ''}
-        </div>
-
-        <div class="h-px bg-white/5 w-full my-1"></div>
-
-        <div class="space-y-2">
-          <div class="flex justify-between items-center text-sm">
-            <span class="text-zinc-500">Passagem</span>
-            <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.passagem)}</span>
+            ${nota.emitida 
+              ? '<span class="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-wide uppercase">Emitida</span>' 
+              : '<span class="text-xs text-zinc-500 font-medium">BM: '+(nota.bm || '')+'</span>'}
           </div>
-          <div class="flex justify-between items-center text-sm">
-            <span class="text-zinc-500">Alimentação</span>
-            <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.alimentacao)}</span>
+
+          <div class="p-6 flex-1 flex flex-col gap-5">
+            
+            <div class="space-y-3">
+              ${nota.referencia ? `
+                <div>
+                  <p class="text-xs text-zinc-400 leading-relaxed line-clamp-3">${formatDescription(nota.referencia)}</p>
+                  <button class="btn-ver-mais text-[10px] font-medium text-violet-400 hover:text-violet-300 mt-1 uppercase tracking-wider">Ler mais</button>
+                </div>
+              ` : ''}
+              ${nota.in ? `<p class="text-[11px] font-medium text-amber-500/80 leading-snug">${formatDescription(nota.in)}</p>` : ''}
+            </div>
+
+            <div class="h-px bg-white/5 w-full my-1"></div>
+
+            <div class="space-y-2">
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-zinc-500">Passagem</span>
+                <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.passagem)}</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-zinc-500">Alimentação</span>
+                <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.alimentacao)}</span>
+              </div>
+            </div>
+
+            <div class="bg-violet-500/5 border border-violet-500/10 rounded-xl p-4 flex flex-col gap-1 items-center justify-center my-1">
+              <span class="text-xs font-medium text-violet-300 uppercase tracking-wider">Valor da Nota Fiscal</span>
+              <div class="text-2xl font-bold text-emerald-400 tracking-tight">R$ ${formatBRL(nota.valorNotaFiscal)}</div>
+              <span class="text-[10px] text-zinc-500 mt-1">ISS: ${nota.iss_pct || ''}</span>
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-zinc-500">Base Retenção</span>
+                <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.baseRetencao)}</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-zinc-500">Base Cálculo</span>
+                <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.baseCalculo)}</span>
+              </div>
+            </div>
+
+            <div class="mt-auto">
+              <div class="grid grid-cols-3 gap-2">
+                <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+                  <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">ISS</div>
+                  <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.iss || 0)}</div>
+                </div>
+                <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+                  <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">IRRF</div>
+                  <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.irrf || 0)}</div>
+                </div>
+                <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+                  <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">PIS</div>
+                  <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.pis || 0)}</div>
+                </div>
+                <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+                  <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">COFINS</div>
+                  <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.cofins || 0)}</div>
+                </div>
+                <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+                  <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">CSLL</div>
+                  <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.csll || 0)}</div>
+                </div>
+                <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+                  <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">INSS</div>
+                  <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.inss || 0)}</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="p-4 border-t border-white/5 bg-black/10">
+            ${nota.emitida 
+              ? `<div class="flex gap-2">
+                  <button class="flex-1 py-2.5 px-3 rounded-lg text-xs font-medium border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors flex items-center justify-center gap-1" onclick="handleDesfazer('${nota.docId}')">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                    Desfazer
+                  </button>
+                  ${nota.anexoUrl ? `
+                  <a href="${nota.anexoUrl}" target="_blank" class="flex-1 py-2.5 px-3 rounded-lg text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-colors flex items-center justify-center gap-1 text-center">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    Ver
+                  </a>` : ''}
+                </div>`
+              : `<button class="w-full py-3 px-4 rounded-xl text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white transition-all duration-200 transform active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20" onclick="iniciarEmissao('${nota.docId}')">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                  Marcar Emitida
+                </button>`
+            }
           </div>
         </div>
-
-        <div class="bg-violet-500/5 border border-violet-500/10 rounded-xl p-4 flex flex-col gap-1 items-center justify-center my-1">
-          <span class="text-xs font-medium text-violet-300 uppercase tracking-wider">Valor da Nota Fiscal</span>
-          <div class="text-2xl font-bold text-emerald-400 tracking-tight">R$ ${formatBRL(nota.valorNotaFiscal)}</div>
-          <span class="text-[10px] text-zinc-500 mt-1">ISS: ${nota.iss_pct}</span>
-        </div>
-
-        <div class="space-y-2">
-          <div class="flex justify-between items-center text-sm">
-            <span class="text-zinc-500">Base Retenção</span>
-            <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.baseRetencao)}</span>
-          </div>
-          <div class="flex justify-between items-center text-sm">
-            <span class="text-zinc-500">Base Cálculo</span>
-            <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.baseCalculo)}</span>
-          </div>
-        </div>
-
-        <div class="mt-auto">
-          <div class="grid grid-cols-3 gap-2">
-            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
-              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">ISS</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.iss || 0)}</div>
-            </div>
-            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
-              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">IRRF</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.irrf || 0)}</div>
-            </div>
-            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
-              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">PIS</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.pis || 0)}</div>
-            </div>
-            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
-              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">COFINS</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.cofins || 0)}</div>
-            </div>
-            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
-              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">CSLL</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.csll || 0)}</div>
-            </div>
-            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
-              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">INSS</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.inss || 0)}</div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="p-4 border-t border-white/5 bg-black/10">
-        ${nota.emitida 
-          ? `<div class="flex gap-2">
-               <button class="flex-1 py-2.5 px-3 rounded-lg text-xs font-medium border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors flex items-center justify-center gap-1" onclick="handleDesfazer('${nota.docId}')">
-                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
-                 Desfazer
-               </button>
-               ${nota.anexoUrl ? `
-               <a href="${nota.anexoUrl}" target="_blank" class="flex-1 py-2.5 px-3 rounded-lg text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-colors flex items-center justify-center gap-1 text-center">
-                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                 Ver
-               </a>` : ''}
-             </div>`
-          : `<button class="w-full py-3 px-4 rounded-xl text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white transition-all duration-200 transform active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20" onclick="iniciarEmissao('${nota.docId}')">
-               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-               Marcar Emitida
-             </button>`
-        }
-      </div>
-    </div>
-  `).join('');
+      `;
+    } catch (e) {
+      console.error(e);
+      return `<div class="bg-red-900/50 p-4 rounded-xl text-red-200 border border-red-500/30">Erro na nota ${nota.cidade || 'desconhecida'}: ${e.message}</div>`;
+    }
+  }).join('');
 }
 
 window.iniciarEmissao = (docId) => {
