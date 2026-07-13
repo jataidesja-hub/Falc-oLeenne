@@ -271,27 +271,27 @@ function renderCards() {
           <div class="grid grid-cols-3 gap-2">
             <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
               <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">ISS</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.iss)}</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.iss || 0)}</div>
             </div>
             <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
               <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">IRRF</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.irrf)}</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.irrf || 0)}</div>
             </div>
             <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
               <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">PIS</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.pis)}</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.pis || 0)}</div>
             </div>
             <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
               <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">COFINS</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.cofins)}</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.cofins || 0)}</div>
             </div>
             <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
               <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">CSLL</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.csll)}</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.csll || 0)}</div>
             </div>
             <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
               <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">INSS</div>
-              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.inss)}</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos?.inss || 0)}</div>
             </div>
           </div>
         </div>
@@ -334,8 +334,10 @@ fileInputAnexo.addEventListener('change', async (e) => {
   pendingToggleNota = null;
   fileInputAnexo.value = '';
 
-  const btn = document.querySelector(`.card-footer button`);
-  btn.textContent = '⏳ Anexando...';
+  loadingOverlay.style.display = 'flex';
+  const txt = loadingOverlay.querySelector('p');
+  const oldTxt = txt.textContent;
+  txt.textContent = 'Anexando nota...';
   
   try {
     const ext = file.name.split('.').pop();
@@ -352,7 +354,12 @@ fileInputAnexo.addEventListener('change', async (e) => {
       updatedAt: new Date().toISOString()
     }, { merge: true });
     
+    txt.textContent = oldTxt;
+    loadingOverlay.style.display = 'none';
+
   } catch (err) {
+    txt.textContent = oldTxt;
+    loadingOverlay.style.display = 'none';
     alert('Erro ao anexar: ' + err.message);
     renderCards();
   }
