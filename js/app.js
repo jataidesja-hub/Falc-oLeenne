@@ -426,14 +426,14 @@ function renderResumo() {
     <!-- DATA -->
     <tr class="hover:bg-white/[0.02] transition-colors border-b border-white/10 last:border-0">
       <!-- NORMAL -->
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.normal.passagem)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.normal.alimentacao)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm font-bold text-violet-400 border-r border-white/5">${formatBRL(row.normal.valorNotaFiscal)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.normal.passagem)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.normal.alimentacao)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono text-sm font-bold text-violet-400 border-r border-white/5">${formatBRL(row.normal.valorNotaFiscal)}</td>
       
       <!-- REAJUSTE -->
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.reajuste.passagem)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.reajuste.alimentacao)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm font-bold text-amber-500">${formatBRL(row.reajuste.valorNotaFiscal)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.reajuste.passagem)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.reajuste.alimentacao)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono text-sm font-bold text-amber-500">${formatBRL(row.reajuste.valorNotaFiscal)}</td>
     </tr>
   `).join('');
   
@@ -446,13 +446,13 @@ function renderResumo() {
       <td colspan="6" class="px-6 py-3 text-center font-bold text-white uppercase tracking-widest text-[13px] bg-black/40 border-b border-white/5">Total Geral</td>
     </tr>
     <tr>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(tpN)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(taN)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-violet-400 bg-black/10 border-r border-white/5">R$ ${formatBRL(tnfN)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(tpN)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(taN)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono font-bold text-violet-400 bg-black/10 border-r border-white/5">R$ ${formatBRL(tnfN)}</td>
       
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(tpR)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(taR)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-amber-500 bg-black/10">R$ ${formatBRL(tnfR)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(tpR)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(taR)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-center font-mono font-bold text-amber-500 bg-black/10">R$ ${formatBRL(tnfR)}</td>
     </tr>
   `;
 }

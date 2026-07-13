@@ -79,9 +79,9 @@
       <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
 
       <!-- Tabela de Resumo (Oculta por padrão) -->
-      <div id="resumo-container" class="hidden overflow-hidden rounded-2xl border border-white/5 bg-zinc-900/50 backdrop-blur-md">
+      <div id="resumo-container" class="hidden max-w-5xl mx-auto overflow-hidden rounded-2xl border border-white/5 bg-zinc-900/50 backdrop-blur-md">
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-zinc-400">
+          <table class="w-full table-fixed text-center text-sm text-zinc-400">
             <thead class="bg-black/20 text-xs uppercase text-zinc-500 border-b border-white/5">
               <tr>
                 <th scope="col" colspan="3" class="px-6 py-3 font-bold tracking-wider text-center text-violet-400 border-b border-white/5 border-r">Normal</th>
@@ -89,14 +89,14 @@
               </tr>
               <tr>
                 <!-- Normal -->
-                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-right">Passagem</th>
-                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-right">Alimentação</th>
-                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-right border-r border-white/5">Valor NF</th>
+                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-center">Passagem</th>
+                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-center">Alimentação</th>
+                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-center border-r border-white/5">Valor NF</th>
                 
                 <!-- Reajuste -->
-                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-right">Passagem</th>
-                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-right">Alimentação</th>
-                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-right">Valor NF</th>
+                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-center">Passagem</th>
+                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-center">Alimentação</th>
+                <th scope="col" class="px-4 py-3 font-medium tracking-wider text-center">Valor NF</th>
               </tr>
             </thead>
             <tbody id="resumo-tbody" class="divide-y divide-white/5">
