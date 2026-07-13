@@ -18,9 +18,13 @@ function parsePlanilha(workbook) {
 
   function extrairNumero(row, startIdx) {
     for (let i = startIdx; i < row.length; i++) {
-      const v = String(row[i]).replace(/\./g, '').replace(',', '.').trim();
-      const n = parseFloat(v);
-      if (!isNaN(n) && n > 0) return n;
+      let cell = row[i];
+      if (typeof cell === 'number') return cell;
+      if (typeof cell === 'string') {
+        const v = cell.replace(/[^\d,-]/g, '').replace(',', '.');
+        const n = parseFloat(v);
+        if (!isNaN(n) && n > 0) return n;
+      }
     }
     return 0;
   }
@@ -51,6 +55,8 @@ function parsePlanilha(workbook) {
           cidade,
           bm: bmGlobal,
           periodo: periodoGlobal,
+          referencia: linha.trim(),
+          in: '',
           passagem: 0,
           alimentacao: 0,
           valorNotaFiscal: 0,
@@ -67,14 +73,18 @@ function parsePlanilha(workbook) {
 
     if (!bloco) continue;
 
-    if (linha.toUpperCase().includes('BOLETIM DE MEDIÇÃO') && !bloco.bm) {
-      const m = linha.match(/(\d+\/\d+)/);
+    if (linha.toUpperCase().includes('BOLETIM DE MEDIÇÃO')) {
+      const m = linha.match(/BOLETIM DE MEDIÇÃO[:\s]+(\d+\/\d+)/i);
       if (m) bloco.bm = m[1];
     }
 
     if (linha.toUpperCase().startsWith('PERÍODO') && linha.match(/\d{2}\/\d{2}\/\d{4}/)) {
       const m = linha.match(/(\d{2}\/\d{2}\/\d{4}\s*[aA]\s*\d{2}\/\d{2}\/\d{4})/);
-      if (m && !bloco.periodo) bloco.periodo = m[1];
+      if (m) bloco.periodo = m[1];
+    }
+
+    if (linha.toUpperCase().includes('INSTRUÇÃO NORMATIVA')) {
+       bloco.in = linha.trim();
     }
 
     if (linha.toUpperCase().includes('PASSAGEM') && !linha.toUpperCase().includes('CONFORME')) {
@@ -108,8 +118,12 @@ function parsePlanilha(workbook) {
     if (aguardandoTributos) {
       const nums = [];
       for (const cell of row) {
-        const v = String(cell).replace(/\./g, '').replace(',', '.').trim();
-        const n = parseFloat(v);
+        let n = 0;
+        if (typeof cell === 'number') n = cell;
+        else if (typeof cell === 'string') {
+          const v = cell.replace(/[^\d,-]/g, '').replace(',', '.');
+          n = parseFloat(v);
+        }
         if (!isNaN(n) && n > 0) nums.push(n);
       }
       if (nums.length >= 6) {

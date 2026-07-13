@@ -88,8 +88,10 @@ function formatBRL(n) {
 }
 
 function gerarTexto(nota) {
-  return `CIDADE: ${nota.cidade}
-BM: ${nota.bm} | PERÍODO: ${nota.periodo}
+  return `${nota.referencia}
+BOLETIM DE MEDIÇÃO: ${nota.bm}
+PERÍODO: ${nota.periodo}
+${nota.in}
 PASSAGEM: R$ ${formatBRL(nota.passagem)}
 ALIMENTAÇÃO: R$ ${formatBRL(nota.alimentacao)}
 VALOR DA NOTA FISCAL: R$ ${formatBRL(nota.valorNotaFiscal)} | ISS: ${nota.iss_pct}
@@ -119,6 +121,8 @@ function renderCards() {
         <div class="card-bm">${nota.bm}</div>
       </div>
       <div class="card-body">
+        ${nota.referencia ? `<div class="referencia-text">${nota.referencia}</div>` : ''}
+        ${nota.in ? `<div class="in-text">${nota.in}</div>` : ''}
         <div class="row-info">
           <span class="label">Período</span>
           <span>${nota.periodo}</span>
