@@ -376,26 +376,20 @@ function renderCards() {
 function renderResumo() {
   const agrupado = {};
   
-  let totalPassagem = 0;
-  let totalAlimentacao = 0;
-  let totalNf = 0;
+  let tpN = 0, taN = 0, tnfN = 0;
+  let tpR = 0, taR = 0, tnfR = 0;
 
   notasData.forEach(nota => {
     const isReajuste = nota.cidade.toUpperCase().includes('REAJUSTE') || nota.cidade.toUpperCase().includes('(R)');
-    const tipo = isReajuste ? 'Reajuste' : 'Normal';
     
     let nomeCidade = nota.cidade.replace(/\s*\(R\)\s*/i, '').replace(/\s*REAJUSTE\s*/i, '').trim();
     if (!nomeCidade) nomeCidade = 'Desconhecida';
     
-    const key = `${nomeCidade}_${tipo}`;
-    
-    if (!agrupado[key]) {
-      agrupado[key] = {
+    if (!agrupado[nomeCidade]) {
+      agrupado[nomeCidade] = {
         cidade: nomeCidade,
-        tipo: tipo,
-        passagem: 0,
-        alimentacao: 0,
-        valorNotaFiscal: 0
+        normal: { passagem: 0, alimentacao: 0, valorNotaFiscal: 0 },
+        reajuste: { passagem: 0, alimentacao: 0, valorNotaFiscal: 0 }
       };
     }
     
@@ -403,43 +397,54 @@ function renderResumo() {
     const alim = Number(nota.alimentacao) || 0;
     const vnf = Number(nota.valorNotaFiscal) || 0;
     
-    agrupado[key].passagem += pass;
-    agrupado[key].alimentacao += alim;
-    agrupado[key].valorNotaFiscal += vnf;
-    
-    totalPassagem += pass;
-    totalAlimentacao += alim;
-    totalNf += vnf;
+    if (isReajuste) {
+      agrupado[nomeCidade].reajuste.passagem += pass;
+      agrupado[nomeCidade].reajuste.alimentacao += alim;
+      agrupado[nomeCidade].reajuste.valorNotaFiscal += vnf;
+      tpR += pass; taR += alim; tnfR += vnf;
+    } else {
+      agrupado[nomeCidade].normal.passagem += pass;
+      agrupado[nomeCidade].normal.alimentacao += alim;
+      agrupado[nomeCidade].normal.valorNotaFiscal += vnf;
+      tpN += pass; taN += alim; tnfN += vnf;
+    }
   });
 
-  const linhas = Object.values(agrupado).sort((a, b) => {
-    if (a.cidade === b.cidade) return a.tipo.localeCompare(b.tipo);
-    return a.cidade.localeCompare(b.cidade);
-  });
+  const linhas = Object.values(agrupado).sort((a, b) => a.cidade.localeCompare(b.cidade));
   
   resumoTbody.innerHTML = linhas.map(row => `
-    <tr class="hover:bg-white/[0.02] transition-colors">
-      <td class="px-6 py-4 whitespace-nowrap">
-        <span class="font-medium text-zinc-300 uppercase">${row.cidade.split(' ')[0]}</span>
+    <tr class="hover:bg-white/[0.02] transition-colors border-b border-white/5 last:border-0">
+      <!-- NORMAL -->
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 border-r border-white/5 opacity-80">R$ ${formatBRL(row.normal.passagem)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 border-r border-white/5 opacity-80">R$ ${formatBRL(row.normal.alimentacao)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm font-bold text-violet-400">R$ ${formatBRL(row.normal.valorNotaFiscal)}</td>
+      
+      <!-- CIDADE (CENTER) -->
+      <td class="px-6 py-4 whitespace-nowrap text-center align-middle bg-black/20 border-x border-white/5">
+        <span class="font-bold text-zinc-200 uppercase tracking-wide text-[15px] drop-shadow-md">${row.cidade.split(' ')[0]}</span>
       </td>
-      <td class="px-6 py-4 whitespace-nowrap">
-        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md ${row.tipo === 'Reajuste' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-violet-500/10 text-violet-400 border border-violet-500/20'}">${row.tipo}</span>
-      </td>
-      <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400">R$ ${formatBRL(row.passagem)}</td>
-      <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400">R$ ${formatBRL(row.alimentacao)}</td>
-      <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-sm font-bold text-emerald-400">R$ ${formatBRL(row.valorNotaFiscal)}</td>
+
+      <!-- REAJUSTE -->
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 border-r border-white/5 opacity-80">R$ ${formatBRL(row.reajuste.passagem)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 border-r border-white/5 opacity-80">R$ ${formatBRL(row.reajuste.alimentacao)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm font-bold text-amber-500">R$ ${formatBRL(row.reajuste.valorNotaFiscal)}</td>
     </tr>
   `).join('');
   
   if (linhas.length === 0) {
-    resumoTbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-zinc-500">Nenhum dado encontrado.</td></tr>`;
+    resumoTbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Nenhum dado encontrado.</td></tr>`;
   }
   
   resumoTfoot.innerHTML = `
-    <td colspan="2" class="px-6 py-4 whitespace-nowrap uppercase tracking-wider text-xs">Total Geral</td>
-    <td class="px-6 py-4 whitespace-nowrap text-right font-mono">R$ ${formatBRL(totalPassagem)}</td>
-    <td class="px-6 py-4 whitespace-nowrap text-right font-mono">R$ ${formatBRL(totalAlimentacao)}</td>
-    <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-emerald-400">R$ ${formatBRL(totalNf)}</td>
+    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10 border-r border-white/5">R$ ${formatBRL(tpN)}</td>
+    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10 border-r border-white/5">R$ ${formatBRL(taN)}</td>
+    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-violet-400 bg-black/10">R$ ${formatBRL(tnfN)}</td>
+    
+    <td class="px-6 py-4 whitespace-nowrap text-center uppercase tracking-wider text-xs font-bold text-white bg-black/40 border-x border-white/5">Total Geral</td>
+    
+    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10 border-r border-white/5">R$ ${formatBRL(tpR)}</td>
+    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10 border-r border-white/5">R$ ${formatBRL(taR)}</td>
+    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-amber-500 bg-black/10">R$ ${formatBRL(tnfR)}</td>
   `;
 }
 
