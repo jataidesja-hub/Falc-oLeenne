@@ -1,55 +1,89 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Falcão Leenne – Emissão de Notas</title>
-  <meta name="description" content="Sistema de controle de emissão de notas fiscais." />
-  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+    
+    /* Spinner */
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1);
+      border-left-color: #8b5cf6; border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
-<body>
+<body class="bg-zinc-950 text-zinc-300 min-h-screen font-sans selection:bg-violet-600/30">
 
-  <header>
-    <div class="logo" onclick="window.location.reload()" style="cursor:pointer;">
-      <div class="logo-icon">🦅</div>
-      <h1>Falcão Leenne</h1>
-    </div>
-    <div class="header-meta" id="headerMeta" style="display:none;">
-      <button id="btnVoltar" class="btn-voltar">← Voltar</button>
-      <span id="bmTitle"></span>
-      <span id="periodoTitle"></span>
-      <span id="stats"></span>
+  <header class="border-b border-white/5 bg-zinc-900/50 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.reload()">
+        <span class="text-2xl">🦅</span>
+        <h1 class="font-semibold text-xl text-white tracking-tight">Falcão Leenne</h1>
+      </div>
+      
+      <div id="headerMeta" class="hidden items-center gap-3">
+        <button id="btnVoltar" class="text-sm font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          Voltar
+        </button>
+        <div class="h-4 w-px bg-zinc-800 mx-2 hidden sm:block"></div>
+        <span id="bmTitle" class="px-2.5 py-1 text-xs font-medium rounded-full bg-zinc-900 text-zinc-300 border border-zinc-800 hidden sm:inline-flex"></span>
+        <span id="periodoTitle" class="px-2.5 py-1 text-xs font-medium rounded-full bg-zinc-900 text-zinc-300 border border-zinc-800 hidden md:inline-flex"></span>
+        <span id="stats" class="px-2.5 py-1 text-xs font-medium rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20"></span>
+      </div>
     </div>
   </header>
 
-  <!-- Dashboard -->
-  <section id="dashboard-section">
-    <div class="toolbar">
-      <h2>Boletins de Medição (BM)</h2>
-      <button id="btnNovaPlanilha" class="btn-primary">➕ Subir Nova Planilha</button>
-      <input type="file" id="fileInputPlanilha" accept=".xlsx,.xls" style="display:none;" />
-    </div>
-    <div id="bmList" class="bm-grid">
-      <!-- Loading ou lista de BMs -->
-    </div>
-  </section>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Dashboard -->
+    <section id="dashboard-section">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-2xl font-semibold text-white tracking-tight">Boletins de Medição</h2>
+        <button id="btnNovaPlanilha" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-violet-500/20 active:scale-95 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          Nova Planilha
+        </button>
+        <input type="file" id="fileInputPlanilha" accept=".xlsx,.xls" class="hidden" />
+      </div>
+      <div id="bmList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Loading ou lista de BMs -->
+      </div>
+    </section>
 
-  <!-- Main View (Cidades) -->
-  <section id="main-section" style="display:none;">
-    <div class="toolbar">
-      <h2>Notas por Cidade</h2>
-      <button id="btnDownloadZip" class="btn-primary" style="margin-left:auto; margin-right: 1rem;">📦 Baixar Anexos (ZIP)</button>
-      <button id="filterPendentes">⏳ Só Pendentes</button>
-    </div>
-    <div id="grid"></div>
-  </section>
+    <!-- Main View (Cidades) -->
+    <section id="main-section" class="hidden">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <h2 class="text-2xl font-semibold text-white tracking-tight">Notas por Cidade</h2>
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="btnDownloadZip" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-violet-500/20 active:scale-95 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Baixar Anexos
+          </button>
+          <button id="filterPendentes" class="px-4 py-2 bg-transparent border border-zinc-700 text-zinc-300 hover:bg-zinc-900 text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>Só Pendentes</span>
+          </button>
+        </div>
+      </div>
+      <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+    </section>
+  </main>
 
-  <input type="file" id="fileInputAnexo" style="display:none;" accept="image/*,.pdf" />
+  <input type="file" id="fileInputAnexo" class="hidden" accept="image/*,.pdf" />
 
   <!-- Loading Overlay -->
-  <div id="loadingOverlay" class="loading-overlay" style="display:none;">
-    <div class="spinner"></div>
-    <p>Processando, por favor aguarde...</p>
+  <div id="loadingOverlay" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 hidden flex-col items-center justify-center text-zinc-300">
+    <div class="spinner mb-4"></div>
+    <p class="text-sm font-medium">Processando, por favor aguarde...</p>
   </div>
 
   <!-- Libs -->

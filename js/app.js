@@ -134,15 +134,16 @@ fileInputPlanilha.addEventListener('change', (e) => {
 async function loadDashboard() {
   if (unsubscribe) { unsubscribe(); unsubscribe = null; }
   currentBmId = null;
-  dashSection.style.display = 'block';
-  mainSection.style.display = 'none';
-  headerMeta.style.display = 'none';
-  bmList.innerHTML = '<p>Carregando BMs...</p>';
+  dashSection.classList.remove('hidden');
+  mainSection.classList.add('hidden');
+  headerMeta.classList.add('hidden');
+  headerMeta.classList.remove('flex');
+  bmList.innerHTML = '<p class="text-zinc-400">Carregando BMs...</p>';
 
   try {
     const snap = await getDocs(collection(db, 'bms'));
     if (snap.empty) {
-      bmList.innerHTML = '<p>Nenhuma planilha importada ainda.</p>';
+      bmList.innerHTML = '<p class="text-zinc-400">Nenhuma planilha importada ainda.</p>';
       return;
     }
     const bms = [];
@@ -150,29 +151,33 @@ async function loadDashboard() {
     bms.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
 
     bmList.innerHTML = bms.map(b => `
-      <div class="bm-card">
-        <div class="bm-card-content" onclick="openBM('${b.id}', '${b.bm}', '${b.periodo}')">
-          <h3>BM: ${b.bm}</h3>
-          <p>Período: ${b.periodo}</p>
+      <div class="group relative bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl p-6 hover:border-violet-500/50 hover:bg-zinc-900/80 transition-all duration-300 flex flex-col cursor-pointer">
+        <div class="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none"></div>
+        <div class="flex-1" onclick="openBM('${b.id}', '${b.bm}', '${b.periodo}')">
+          <h3 class="text-lg font-semibold text-white mb-1">BM: ${b.bm}</h3>
+          <p class="text-sm text-zinc-400">Período: ${b.periodo}</p>
         </div>
-        <button class="btn-delete-bm" onclick="deleteBM('${b.id}')">🗑️ Excluir</button>
+        <div class="mt-4 pt-4 border-t border-white/5 flex justify-end">
+          <button class="text-xs font-medium text-red-400 hover:text-red-300 transition-colors flex items-center gap-1" onclick="deleteBM('${b.id}')">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            Excluir
+          </button>
+        </div>
       </div>
     `).join('');
   } catch (err) {
-    bmList.innerHTML = `<p>Erro ao carregar BMs: ${err.message}</p>`;
+    bmList.innerHTML = `<p class="text-red-400">Erro ao carregar BMs: ${err.message}</p>`;
   }
 }
 
 window.deleteBM = async (bmId) => {
   if (!confirm('Tem certeza que deseja excluir este Boletim de Medição? Isso apagará todas as cidades dele.')) return;
   try {
-    // Busca todas as notas deste BM para excluí-las
     const snap = await getDocs(collection(db, `notas_${bmId}`));
     const deletes = [];
     snap.forEach(d => deletes.push(deleteDoc(doc(db, `notas_${bmId}`, d.id))));
     await Promise.all(deletes);
     
-    // Exclui o documento do BM
     await deleteDoc(doc(db, 'bms', bmId));
     
     loadDashboard();
@@ -183,9 +188,10 @@ window.deleteBM = async (bmId) => {
 
 window.openBM = (bmId, bmText, periodoText) => {
   currentBmId = bmId;
-  dashSection.style.display = 'none';
-  mainSection.style.display = 'block';
-  headerMeta.style.display = 'flex';
+  dashSection.classList.add('hidden');
+  mainSection.classList.remove('hidden');
+  headerMeta.classList.remove('hidden');
+  headerMeta.classList.add('flex');
   bmTitle.textContent = `BM: ${bmText}`;
   periodoTitle.textContent = `Período: ${periodoText}`;
   
@@ -208,51 +214,107 @@ function renderCards() {
   statsEl.textContent = `${emitidas} de ${notasData.length} emitidas`;
 
   grid.innerHTML = lista.map((nota, i) => `
-    <div class="card ${nota.emitida ? 'emitida' : ''}">
-      <div class="card-header">
-        <div>
-          <span class="badge-cidade">${nota.cidade}</span>
-          ${nota.emitida ? '<span class="badge-ok">✓ EMITIDA</span>' : ''}
+    <div class="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-colors flex flex-col ${nota.emitida ? 'opacity-70 grayscale-[20%]' : ''}">
+      
+      <div class="p-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-bold text-violet-400 uppercase tracking-wider">${nota.cidade.split(' ')[0]} ${nota.cidade.includes('REAJUSTE')?'<span class="text-amber-500">(R)</span>':''}</span>
         </div>
-        <div class="card-bm">${nota.bm}</div>
-      </div>
-      <div class="card-body">
-        ${nota.referencia ? `<div class="referencia-text">${nota.referencia}</div>` : ''}
-        ${nota.in ? `<div class="in-text">${nota.in}</div>` : ''}
-        <div class="row-info">
-          <span class="label">Passagem</span>
-          <span>R$ ${formatBRL(nota.passagem)}</span>
-        </div>
-        <div class="row-info">
-          <span class="label">Alimentação</span>
-          <span>R$ ${formatBRL(nota.alimentacao)}</span>
-        </div>
-        <div class="row-info highlight">
-          <span class="label">Valor da Nota Fiscal</span>
-          <span>R$ ${formatBRL(nota.valorNotaFiscal)} <small>${nota.iss_pct}</small></span>
-        </div>
-        <div class="row-info">
-          <span class="label">Base Retenção</span>
-          <span>R$ ${formatBRL(nota.baseRetencao)}</span>
-        </div>
-        <div class="row-info">
-          <span class="label">Base de Cálculo</span>
-          <span>R$ ${formatBRL(nota.baseCalculo)}</span>
-        </div>
-        <div class="tributos-grid">
-          <div class="trib"><span>ISS</span><strong>${formatBRL(nota.tributos.iss)}</strong></div>
-          <div class="trib"><span>IRRF</span><strong>${formatBRL(nota.tributos.irrf)}</strong></div>
-          <div class="trib"><span>PIS</span><strong>${formatBRL(nota.tributos.pis)}</strong></div>
-          <div class="trib"><span>COFINS</span><strong>${formatBRL(nota.tributos.cofins)}</strong></div>
-          <div class="trib"><span>CSLL</span><strong>${formatBRL(nota.tributos.csll)}</strong></div>
-          <div class="trib"><span>INSS</span><strong>${formatBRL(nota.tributos.inss)}</strong></div>
-        </div>
-      </div>
-      <div class="card-footer">
         ${nota.emitida 
-          ? `<button class="btn-action danger" onclick="handleDesfazer('${nota.docId}')">↩ Desfazer</button>
-             ${nota.anexoUrl ? `<a href="${nota.anexoUrl}" target="_blank" class="btn-action view">📄 Ver Anexo</a>` : ''}`
-          : `<button class="btn-action emit" onclick="iniciarEmissao('${nota.docId}')">✓ Marcar como Emitida (Anexar Nota)</button>`
+          ? '<span class="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-wide uppercase">Emitida</span>' 
+          : '<span class="text-xs text-zinc-500 font-medium">BM: '+nota.bm+'</span>'}
+      </div>
+
+      <div class="p-6 flex-1 flex flex-col gap-5">
+        
+        <div class="space-y-3">
+          ${nota.referencia ? `
+            <div>
+              <p class="text-xs text-zinc-400 leading-relaxed line-clamp-3">${formatDescription(nota.referencia)}</p>
+              <button class="btn-ver-mais text-[10px] font-medium text-violet-400 hover:text-violet-300 mt-1 uppercase tracking-wider">Ler mais</button>
+            </div>
+          ` : ''}
+          ${nota.in ? `<p class="text-[11px] font-medium text-amber-500/80 leading-snug">${formatDescription(nota.in)}</p>` : ''}
+        </div>
+
+        <div class="h-px bg-white/5 w-full my-1"></div>
+
+        <div class="space-y-2">
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-zinc-500">Passagem</span>
+            <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.passagem)}</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-zinc-500">Alimentação</span>
+            <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.alimentacao)}</span>
+          </div>
+        </div>
+
+        <div class="bg-violet-500/5 border border-violet-500/10 rounded-xl p-4 flex flex-col gap-1 items-center justify-center my-1">
+          <span class="text-xs font-medium text-violet-300 uppercase tracking-wider">Valor da Nota Fiscal</span>
+          <div class="text-2xl font-bold text-emerald-400 tracking-tight">R$ ${formatBRL(nota.valorNotaFiscal)}</div>
+          <span class="text-[10px] text-zinc-500 mt-1">ISS: ${nota.iss_pct}</span>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-zinc-500">Base Retenção</span>
+            <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.baseRetencao)}</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-zinc-500">Base Cálculo</span>
+            <span class="text-zinc-300 font-medium">R$ ${formatBRL(nota.baseCalculo)}</span>
+          </div>
+        </div>
+
+        <div class="mt-auto">
+          <div class="grid grid-cols-3 gap-2">
+            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">ISS</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.iss)}</div>
+            </div>
+            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">IRRF</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.irrf)}</div>
+            </div>
+            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">PIS</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.pis)}</div>
+            </div>
+            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">COFINS</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.cofins)}</div>
+            </div>
+            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">CSLL</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.csll)}</div>
+            </div>
+            <div class="bg-black/20 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-[10px] text-zinc-500 uppercase font-medium mb-1">INSS</div>
+              <div class="font-mono text-xs text-zinc-300">${formatBRL(nota.tributos.inss)}</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="p-4 border-t border-white/5 bg-black/10">
+        ${nota.emitida 
+          ? `<div class="flex gap-2">
+               <button class="flex-1 py-2.5 px-3 rounded-lg text-xs font-medium border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors flex items-center justify-center gap-1" onclick="handleDesfazer('${nota.docId}')">
+                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                 Desfazer
+               </button>
+               ${nota.anexoUrl ? `
+               <a href="${nota.anexoUrl}" target="_blank" class="flex-1 py-2.5 px-3 rounded-lg text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-colors flex items-center justify-center gap-1 text-center">
+                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                 Ver
+               </a>` : ''}
+             </div>`
+          : `<button class="w-full py-3 px-4 rounded-xl text-sm font-medium bg-violet-600 hover:bg-violet-500 text-white transition-all duration-200 transform active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20" onclick="iniciarEmissao('${nota.docId}')">
+               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+               Marcar Emitida
+             </button>`
         }
       </div>
     </div>
