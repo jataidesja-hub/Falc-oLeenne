@@ -382,8 +382,8 @@ function renderResumo() {
   notasData.forEach(nota => {
     const isReajuste = nota.cidade.toUpperCase().includes('REAJUSTE') || nota.cidade.toUpperCase().includes('(R)');
     
-    let nomeCidade = nota.cidade.replace(/\s*\(R\)\s*/i, '').replace(/\s*REAJUSTE\s*/i, '').trim();
-    if (!nomeCidade) nomeCidade = 'Desconhecida';
+    let nomeCidade = nota.cidade.replace(/\s*\(\s*R\s*\)\s*/ig, '').replace(/\s*REAJUSTE\s*/ig, '').trim().toUpperCase();
+    if (!nomeCidade) nomeCidade = 'DESCONHECIDA';
     
     if (!agrupado[nomeCidade]) {
       agrupado[nomeCidade] = {
