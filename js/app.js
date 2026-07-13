@@ -1,109 +1,126 @@
-import { db, doc, setDoc, onSnapshot, collection } from './firebase-config.js';
+import { db, storage, doc, setDoc, onSnapshot, collection, getDocs, ref, uploadBytes, getDownloadURL } from './firebase-config.js';
 
 let notasData = [];
 let unsubscribe = null;
+let currentBmId = null;
+let showOnlyPendentes = false;
+let pendingToggleNota = null;
 
-const dropzone = document.getElementById('dropzone');
-const fileInput = document.getElementById('fileInput');
+const dashSection = document.getElementById('dashboard-section');
+const mainSection = document.getElementById('main-section');
+const headerMeta = document.getElementById('headerMeta');
+const bmList = document.getElementById('bmList');
 const grid = document.getElementById('grid');
+const statsEl = document.getElementById('stats');
 const bmTitle = document.getElementById('bmTitle');
 const periodoTitle = document.getElementById('periodoTitle');
-const statsEl = document.getElementById('stats');
-const filterBtn = document.getElementById('filterPendentes');
-let showOnlyPendentes = false;
 
-dropzone.addEventListener('click', () => fileInput.click());
-dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
-dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
-dropzone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropzone.classList.remove('drag-over');
-  handleFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+const btnNovaPlanilha = document.getElementById('btnNovaPlanilha');
+const fileInputPlanilha = document.getElementById('fileInputPlanilha');
+const btnVoltar = document.getElementById('btnVoltar');
+const filterPendentes = document.getElementById('filterPendentes');
+const fileInputAnexo = document.getElementById('fileInputAnexo');
 
-filterBtn.addEventListener('click', () => {
+btnNovaPlanilha.addEventListener('click', () => fileInputPlanilha.click());
+btnVoltar.addEventListener('click', loadDashboard);
+filterPendentes.addEventListener('click', () => {
   showOnlyPendentes = !showOnlyPendentes;
-  filterBtn.textContent = showOnlyPendentes ? '📋 Mostrar Todas' : '⏳ Só Pendentes';
+  filterPendentes.textContent = showOnlyPendentes ? '📋 Mostrar Todas' : '⏳ Só Pendentes';
   renderCards();
 });
 
-function handleFile(file) {
+fileInputPlanilha.addEventListener('change', (e) => {
+  const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async ev => {
     try {
-      const data = new Uint8Array(e.target.result);
+      const data = new Uint8Array(ev.target.result);
       const wb = XLSX.read(data, { type: 'array' });
-      notasData = parsePlanilha(wb);
-      if (notasData.length === 0) {
-        alert('Nenhum bloco encontrado. Verifique se a aba se chama "EMISSÃO DAS NOTAS".');
+      const parsed = parsePlanilha(wb);
+      if (parsed.length === 0) {
+        alert('Nenhum bloco encontrado.');
         return;
       }
-      document.getElementById('upload-section').style.display = 'none';
-      document.getElementById('main-section').style.display = 'block';
-      bmTitle.textContent = `BM: ${notasData[0].bm}`;
-      periodoTitle.textContent = `Período: ${notasData[0].periodo}`;
-      subscribeFirestore();
+      
+      const bmText = parsed[0].bm || 'SemBM';
+      const bmId = bmText.replace(/\//g, '_');
+      
+      // Salva info do BM
+      await setDoc(doc(db, 'bms', bmId), {
+        bm: bmText,
+        periodo: parsed[0].periodo || '',
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
+      // Salva cada nota inicial se não existir
+      for (const nota of parsed) {
+        const id = nota.cidade.replace(/\s+/g, '_').toUpperCase();
+        await setDoc(doc(db, `notas_${bmId}`, id), {
+          ...nota,
+          emitida: false,
+          anexoUrl: null
+        }, { merge: true }); // merge previne sobrescrever notas já emitidas
+      }
+
+      alert('Planilha importada com sucesso!');
+      fileInputPlanilha.value = '';
+      loadDashboard();
     } catch (err) {
-      alert('Erro ao processar planilha: ' + err.message);
+      alert('Erro: ' + err.message);
     }
   };
   reader.readAsArrayBuffer(file);
-}
+});
 
-function subscribeFirestore() {
-  if (unsubscribe) unsubscribe();
-  const bm = notasData[0]?.bm?.replace('/', '_') || 'sem_bm';
-  const colRef = collection(db, `notas_${bm}`);
-  unsubscribe = onSnapshot(colRef, snapshot => {
-    snapshot.forEach(d => {
-      const nota = notasData.find(n => docId(n) === d.id);
-      if (nota) nota.emitida = d.data().emitida ?? false;
-    });
-    renderCards();
-  }, () => renderCards());
-}
+async function loadDashboard() {
+  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+  currentBmId = null;
+  dashSection.style.display = 'block';
+  mainSection.style.display = 'none';
+  headerMeta.style.display = 'none';
+  bmList.innerHTML = '<p>Carregando BMs...</p>';
 
-function docId(nota) {
-  return nota.cidade.replace(/\s+/g, '_').toUpperCase();
-}
-
-async function toggleEmitida(nota) {
-  nota.emitida = !nota.emitida;
-  const bm = nota.bm?.replace('/', '_') || 'sem_bm';
   try {
-    await setDoc(doc(db, `notas_${bm}`, docId(nota)), {
-      emitida: nota.emitida,
-      cidade: nota.cidade,
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
-  } catch {
-    renderCards();
+    const snap = await getDocs(collection(db, 'bms'));
+    if (snap.empty) {
+      bmList.innerHTML = '<p>Nenhuma planilha importada ainda.</p>';
+      return;
+    }
+    const bms = [];
+    snap.forEach(d => bms.push({ id: d.id, ...d.data() }));
+    bms.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+
+    bmList.innerHTML = bms.map(b => `
+      <div class="bm-card" onclick="openBM('${b.id}', '${b.bm}', '${b.periodo}')">
+        <h3>BM: ${b.bm}</h3>
+        <p>Período: ${b.periodo}</p>
+      </div>
+    `).join('');
+  } catch (err) {
+    bmList.innerHTML = `<p>Erro ao carregar BMs: ${err.message}</p>`;
   }
 }
 
+window.openBM = (bmId, bmText, periodoText) => {
+  currentBmId = bmId;
+  dashSection.style.display = 'none';
+  mainSection.style.display = 'block';
+  headerMeta.style.display = 'flex';
+  bmTitle.textContent = `BM: ${bmText}`;
+  periodoTitle.textContent = `Período: ${periodoText}`;
+  
+  if (unsubscribe) unsubscribe();
+  unsubscribe = onSnapshot(collection(db, `notas_${bmId}`), snap => {
+    notasData = [];
+    snap.forEach(d => notasData.push({ docId: d.id, ...d.data() }));
+    notasData.sort((a,b) => a.cidade.localeCompare(b.cidade));
+    renderCards();
+  });
+};
+
 function formatBRL(n) {
-  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function gerarTexto(nota) {
-  return `${nota.referencia}
-BOLETIM DE MEDIÇÃO: ${nota.bm}
-PERÍODO: ${nota.periodo}
-${nota.in}
-PASSAGEM: R$ ${formatBRL(nota.passagem)}
-ALIMENTAÇÃO: R$ ${formatBRL(nota.alimentacao)}
-VALOR DA NOTA FISCAL: R$ ${formatBRL(nota.valorNotaFiscal)} | ISS: ${nota.iss_pct}
-BASE RETENÇÃO: R$ ${formatBRL(nota.baseRetencao)}
-BASE DE CÁLCULO: R$ ${formatBRL(nota.baseCalculo)}
-ISS: ${formatBRL(nota.tributos.iss)} | IRRF: ${formatBRL(nota.tributos.irrf)} | PIS: ${formatBRL(nota.tributos.pis)} | COFINS: ${formatBRL(nota.tributos.cofins)} | CSLL: ${formatBRL(nota.tributos.csll)} | INSS: ${formatBRL(nota.tributos.inss)}`;
-}
-
-async function copiar(nota, btn) {
-  await navigator.clipboard.writeText(gerarTexto(nota));
-  btn.textContent = '✅ Copiado!';
-  setTimeout(() => btn.textContent = '📋 Copiar', 2000);
+  return (n||0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function renderCards() {
@@ -112,7 +129,7 @@ function renderCards() {
   statsEl.textContent = `${emitidas} de ${notasData.length} emitidas`;
 
   grid.innerHTML = lista.map((nota, i) => `
-    <div class="card ${nota.emitida ? 'emitida' : ''}" id="card-${i}">
+    <div class="card ${nota.emitida ? 'emitida' : ''}">
       <div class="card-header">
         <div>
           <span class="badge-cidade">${nota.cidade}</span>
@@ -123,10 +140,6 @@ function renderCards() {
       <div class="card-body">
         ${nota.referencia ? `<div class="referencia-text">${nota.referencia}</div>` : ''}
         ${nota.in ? `<div class="in-text">${nota.in}</div>` : ''}
-        <div class="row-info">
-          <span class="label">Período</span>
-          <span>${nota.periodo}</span>
-        </div>
         <div class="row-info">
           <span class="label">Passagem</span>
           <span>R$ ${formatBRL(nota.passagem)}</span>
@@ -157,21 +170,63 @@ function renderCards() {
         </div>
       </div>
       <div class="card-footer">
-        <button class="btn-copy" onclick="handleCopy(${i}, this)">📋 Copiar</button>
-        <button class="btn-emit ${nota.emitida ? 'emitida' : ''}" onclick="handleToggle(${i})">
-          ${nota.emitida ? '↩ Desfazer' : '✓ Marcar como Emitida'}
-        </button>
+        ${nota.emitida 
+          ? `<button class="btn-action danger" onclick="handleDesfazer('${nota.docId}')">↩ Desfazer</button>
+             ${nota.anexoUrl ? `<a href="${nota.anexoUrl}" target="_blank" class="btn-action view">📄 Ver Anexo</a>` : ''}`
+          : `<button class="btn-action emit" onclick="iniciarEmissao('${nota.docId}')">✓ Marcar como Emitida (Anexar Nota)</button>`
+        }
       </div>
     </div>
   `).join('');
 }
 
-window.handleCopy = (i, btn) => {
-  const lista = showOnlyPendentes ? notasData.filter(n => !n.emitida) : notasData;
-  copiar(lista[i], btn);
+window.iniciarEmissao = (docId) => {
+  pendingToggleNota = notasData.find(n => n.docId === docId);
+  fileInputAnexo.click();
 };
 
-window.handleToggle = (i) => {
-  const lista = showOnlyPendentes ? notasData.filter(n => !n.emitida) : notasData;
-  toggleEmitida(lista[i]);
+fileInputAnexo.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file || !pendingToggleNota) return;
+  
+  const nota = pendingToggleNota;
+  pendingToggleNota = null;
+  fileInputAnexo.value = '';
+
+  const btn = document.querySelector(`.card-footer button`);
+  btn.textContent = '⏳ Anexando...';
+  
+  try {
+    const ext = file.name.split('.').pop();
+    const fileName = `notas/${currentBmId}/${nota.docId}_${Date.now()}.${ext}`;
+    const storageRef = ref(storage, fileName);
+    
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    
+    await setDoc(doc(db, `notas_${currentBmId}`, nota.docId), {
+      emitida: true,
+      anexoUrl: url,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    
+  } catch (err) {
+    alert('Erro ao anexar: ' + err.message);
+    renderCards();
+  }
+});
+
+window.handleDesfazer = async (docId) => {
+  if (!confirm('Deseja realmente desfazer a emissão? (O anexo não será excluído do storage)')) return;
+  try {
+    await setDoc(doc(db, `notas_${currentBmId}`, docId), {
+      emitida: false,
+      anexoUrl: null,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+  } catch(e) {
+    alert('Erro: '+e.message);
+  }
 };
+
+loadDashboard();

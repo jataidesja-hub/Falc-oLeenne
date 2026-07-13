@@ -4,39 +4,38 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Falcão Leenne – Emissão de Notas</title>
-  <meta name="description" content="Sistema de controle de emissão de notas fiscais por planilha Excel." />
+  <meta name="description" content="Sistema de controle de emissão de notas fiscais." />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 
   <header>
-    <div class="logo">
+    <div class="logo" onclick="window.location.reload()" style="cursor:pointer;">
       <div class="logo-icon">🦅</div>
       <h1>Falcão Leenne</h1>
     </div>
-    <div class="header-meta">
+    <div class="header-meta" id="headerMeta" style="display:none;">
+      <button id="btnVoltar" class="btn-voltar">← Voltar</button>
       <span id="bmTitle"></span>
       <span id="periodoTitle"></span>
       <span id="stats"></span>
     </div>
   </header>
 
-  <!-- Upload -->
-  <section id="upload-section">
-    <div class="upload-wrap">
-      <h2>Emissão de Notas Fiscais</h2>
-      <p>Faça upload da planilha para extrair os dados da aba <strong>EMISSÃO DAS NOTAS</strong></p>
-      <div id="dropzone">
-        <span class="drop-icon">📊</span>
-        <h3>Arraste a planilha aqui</h3>
-        <p>ou clique para selecionar o arquivo .xlsx</p>
-      </div>
-      <input type="file" id="fileInput" accept=".xlsx,.xls" />
+  <!-- Dashboard -->
+  <section id="dashboard-section">
+    <div class="toolbar">
+      <h2>Boletins de Medição (BM)</h2>
+      <button id="btnNovaPlanilha" class="btn-primary">➕ Subir Nova Planilha</button>
+      <input type="file" id="fileInputPlanilha" accept=".xlsx,.xls" style="display:none;" />
+    </div>
+    <div id="bmList" class="bm-grid">
+      <!-- Loading ou lista de BMs -->
     </div>
   </section>
 
-  <!-- Main -->
-  <section id="main-section">
+  <!-- Main View (Cidades) -->
+  <section id="main-section" style="display:none;">
     <div class="toolbar">
       <h2>Notas por Cidade</h2>
       <button id="filterPendentes">⏳ Só Pendentes</button>
@@ -44,11 +43,13 @@
     <div id="grid"></div>
   </section>
 
+  <input type="file" id="fileInputAnexo" style="display:none;" accept="image/*,.pdf" />
+
   <!-- SheetJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <!-- Parser -->
   <script src="js/parser.js"></script>
-  <!-- App (ES Module) -->
+  <!-- App -->
   <script type="module" src="js/app.js"></script>
 
 </body>
