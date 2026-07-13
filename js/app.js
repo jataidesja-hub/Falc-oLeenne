@@ -20,6 +20,7 @@ const fileInputPlanilha = document.getElementById('fileInputPlanilha');
 const btnVoltar = document.getElementById('btnVoltar');
 const filterPendentes = document.getElementById('filterPendentes');
 const fileInputAnexo = document.getElementById('fileInputAnexo');
+const loadingOverlay = document.getElementById('loadingOverlay');
 
 btnNovaPlanilha.addEventListener('click', () => fileInputPlanilha.click());
 btnVoltar.addEventListener('click', loadDashboard);
@@ -32,6 +33,7 @@ filterPendentes.addEventListener('click', () => {
 fileInputPlanilha.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
+  loadingOverlay.style.display = 'flex';
   const reader = new FileReader();
   reader.onload = async ev => {
     try {
@@ -40,6 +42,7 @@ fileInputPlanilha.addEventListener('change', (e) => {
       const parsed = parsePlanilha(wb);
       if (parsed.length === 0) {
         alert('Nenhum bloco encontrado.');
+        loadingOverlay.style.display = 'none';
         return;
       }
       
@@ -63,10 +66,12 @@ fileInputPlanilha.addEventListener('change', (e) => {
         }, { merge: true }); // merge previne sobrescrever notas já emitidas
       }
 
+      loadingOverlay.style.display = 'none';
       alert('Planilha importada com sucesso!');
       fileInputPlanilha.value = '';
       loadDashboard();
     } catch (err) {
+      loadingOverlay.style.display = 'none';
       alert('Erro: ' + err.message);
     }
   };
