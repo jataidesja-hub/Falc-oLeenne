@@ -413,38 +413,41 @@ function renderResumo() {
   const linhas = Object.values(agrupado).sort((a, b) => a.cidade.localeCompare(b.cidade));
   
   resumoTbody.innerHTML = linhas.map(row => `
-    <tr class="hover:bg-white/[0.02] transition-colors border-b border-white/5 last:border-0">
+    <!-- CITY HEADER -->
+    <tr class="bg-black/30 border-b border-white/5">
+      <td colspan="6" class="px-6 py-3 text-center font-bold text-zinc-200 uppercase tracking-widest text-[13px]">${row.cidade.split(' ')[0]}</td>
+    </tr>
+    <!-- DATA -->
+    <tr class="hover:bg-white/[0.02] transition-colors border-b border-white/10 last:border-0">
       <!-- NORMAL -->
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 border-r border-white/5 opacity-80">R$ ${formatBRL(row.normal.passagem)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 border-r border-white/5 opacity-80">R$ ${formatBRL(row.normal.alimentacao)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm font-bold text-violet-400">R$ ${formatBRL(row.normal.valorNotaFiscal)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.normal.passagem)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.normal.alimentacao)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm font-bold text-violet-400 border-r border-white/5">${formatBRL(row.normal.valorNotaFiscal)}</td>
       
-      <!-- CIDADE (CENTER) -->
-      <td class="px-6 py-4 whitespace-nowrap text-center align-middle bg-black/20 border-x border-white/5">
-        <span class="font-bold text-zinc-200 uppercase tracking-wide text-[15px] drop-shadow-md">${row.cidade.split(' ')[0]}</span>
-      </td>
-
       <!-- REAJUSTE -->
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 border-r border-white/5 opacity-80">R$ ${formatBRL(row.reajuste.passagem)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 border-r border-white/5 opacity-80">R$ ${formatBRL(row.reajuste.alimentacao)}</td>
-      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm font-bold text-amber-500">R$ ${formatBRL(row.reajuste.valorNotaFiscal)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.reajuste.passagem)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400 opacity-80">${formatBRL(row.reajuste.alimentacao)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono text-sm font-bold text-amber-500">${formatBRL(row.reajuste.valorNotaFiscal)}</td>
     </tr>
   `).join('');
   
   if (linhas.length === 0) {
-    resumoTbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Nenhum dado encontrado.</td></tr>`;
+    resumoTbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-zinc-500">Nenhum dado encontrado.</td></tr>`;
   }
   
   resumoTfoot.innerHTML = `
-    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10 border-r border-white/5">R$ ${formatBRL(tpN)}</td>
-    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10 border-r border-white/5">R$ ${formatBRL(taN)}</td>
-    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-violet-400 bg-black/10">R$ ${formatBRL(tnfN)}</td>
-    
-    <td class="px-6 py-4 whitespace-nowrap text-center uppercase tracking-wider text-xs font-bold text-white bg-black/40 border-x border-white/5">Total Geral</td>
-    
-    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10 border-r border-white/5">R$ ${formatBRL(tpR)}</td>
-    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10 border-r border-white/5">R$ ${formatBRL(taR)}</td>
-    <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-amber-500 bg-black/10">R$ ${formatBRL(tnfR)}</td>
+    <tr>
+      <td colspan="6" class="px-6 py-3 text-center font-bold text-white uppercase tracking-widest text-[13px] bg-black/40 border-b border-white/5">Total Geral</td>
+    </tr>
+    <tr>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(tpN)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(taN)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-violet-400 bg-black/10 border-r border-white/5">R$ ${formatBRL(tnfN)}</td>
+      
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(tpR)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-zinc-300 bg-black/10">R$ ${formatBRL(taR)}</td>
+      <td class="px-4 py-4 whitespace-nowrap text-right font-mono font-bold text-amber-500 bg-black/10">R$ ${formatBRL(tnfR)}</td>
+    </tr>
   `;
 }
 
