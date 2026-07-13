@@ -239,7 +239,7 @@ function renderCards() {
               ${nota.referencia ? `
                 <div>
                   <p class="text-xs text-zinc-400 leading-relaxed line-clamp-3">${formatDescription(nota.referencia)}</p>
-                  <button class="btn-ver-mais text-[10px] font-medium text-violet-400 hover:text-violet-300 mt-1 uppercase tracking-wider">Ler mais</button>
+                  <button class="btn-ver-mais text-[10px] font-medium text-violet-400 hover:text-violet-300 mt-1 uppercase tracking-wider" onclick="toggleReadMore(this)">Ler mais</button>
                 </div>
               ` : ''}
               ${nota.in ? `<p class="text-[11px] font-medium text-amber-500/80 leading-snug">${formatDescription(nota.in)}</p>` : ''}
@@ -388,6 +388,17 @@ window.handleDesfazer = async (docId) => {
     }, { merge: true });
   } catch(e) {
     alert('Erro: '+e.message);
+  }
+};
+
+window.toggleReadMore = (btn) => {
+  const p = btn.previousElementSibling;
+  if (p.classList.contains('line-clamp-3')) {
+    p.classList.remove('line-clamp-3');
+    btn.textContent = 'Ler menos';
+  } else {
+    p.classList.add('line-clamp-3');
+    btn.textContent = 'Ler mais';
   }
 };
 
