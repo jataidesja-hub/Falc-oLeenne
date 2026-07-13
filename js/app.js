@@ -420,8 +420,10 @@ function renderResumo() {
   resumoTbody.innerHTML = linhas.map(row => `
     <tr class="hover:bg-white/[0.02] transition-colors">
       <td class="px-6 py-4 whitespace-nowrap">
-        <div class="font-medium text-zinc-300 uppercase">${row.cidade.split(' ')[0]}</div>
-        <div class="text-[10px] uppercase font-bold tracking-wider mt-1 ${row.tipo === 'Reajuste' ? 'text-amber-500' : 'text-violet-400'}">${row.tipo}</div>
+        <span class="font-medium text-zinc-300 uppercase">${row.cidade.split(' ')[0]}</span>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md ${row.tipo === 'Reajuste' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-violet-500/10 text-violet-400 border border-violet-500/20'}">${row.tipo}</span>
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400">R$ ${formatBRL(row.passagem)}</td>
       <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-sm text-zinc-400">R$ ${formatBRL(row.alimentacao)}</td>
@@ -430,11 +432,11 @@ function renderResumo() {
   `).join('');
   
   if (linhas.length === 0) {
-    resumoTbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-zinc-500">Nenhum dado encontrado.</td></tr>`;
+    resumoTbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-zinc-500">Nenhum dado encontrado.</td></tr>`;
   }
   
   resumoTfoot.innerHTML = `
-    <td class="px-6 py-4 whitespace-nowrap uppercase tracking-wider text-xs">Total Geral</td>
+    <td colspan="2" class="px-6 py-4 whitespace-nowrap uppercase tracking-wider text-xs">Total Geral</td>
     <td class="px-6 py-4 whitespace-nowrap text-right font-mono">R$ ${formatBRL(totalPassagem)}</td>
     <td class="px-6 py-4 whitespace-nowrap text-right font-mono">R$ ${formatBRL(totalAlimentacao)}</td>
     <td class="px-6 py-4 whitespace-nowrap text-right font-mono text-emerald-400">R$ ${formatBRL(totalNf)}</td>
