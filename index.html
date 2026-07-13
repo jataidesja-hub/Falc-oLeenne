@@ -38,6 +38,7 @@
   <section id="main-section" style="display:none;">
     <div class="toolbar">
       <h2>Notas por Cidade</h2>
+      <button id="btnDownloadZip" class="btn-primary" style="margin-left:auto; margin-right: 1rem;">📦 Baixar Anexos (ZIP)</button>
       <button id="filterPendentes">⏳ Só Pendentes</button>
     </div>
     <div id="grid"></div>
@@ -48,11 +49,13 @@
   <!-- Loading Overlay -->
   <div id="loadingOverlay" class="loading-overlay" style="display:none;">
     <div class="spinner"></div>
-    <p>Processando planilha, por favor aguarde...</p>
+    <p>Processando, por favor aguarde...</p>
   </div>
 
-  <!-- SheetJS -->
+  <!-- Libs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <!-- Parser -->
   <script src="js/parser.js"></script>
   <!-- App -->

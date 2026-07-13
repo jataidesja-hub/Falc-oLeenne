@@ -21,6 +21,7 @@ const btnVoltar = document.getElementById('btnVoltar');
 const filterPendentes = document.getElementById('filterPendentes');
 const fileInputAnexo = document.getElementById('fileInputAnexo');
 const loadingOverlay = document.getElementById('loadingOverlay');
+const btnDownloadZip = document.getElementById('btnDownloadZip');
 
 btnNovaPlanilha.addEventListener('click', () => fileInputPlanilha.click());
 btnVoltar.addEventListener('click', loadDashboard);
@@ -28,6 +29,58 @@ filterPendentes.addEventListener('click', () => {
   showOnlyPendentes = !showOnlyPendentes;
   filterPendentes.textContent = showOnlyPendentes ? '📋 Mostrar Todas' : '⏳ Só Pendentes';
   renderCards();
+});
+
+btnDownloadZip.addEventListener('click', async () => {
+  const emitidas = notasData.filter(n => n.emitida && n.anexoUrl);
+  if (emitidas.length === 0) {
+    alert("Nenhuma nota com anexo foi encontrada neste BM.");
+    return;
+  }
+
+  loadingOverlay.style.display = 'flex';
+  const txt = loadingOverlay.querySelector('p');
+  const oldTxt = txt.textContent;
+  txt.textContent = 'Baixando anexos e gerando ZIP...';
+  
+  try {
+    const zip = new JSZip();
+    let count = 0;
+
+    for (const nota of emitidas) {
+      try {
+        const response = await fetch(nota.anexoUrl);
+        if (!response.ok) throw new Error('Falha no fetch');
+        const blob = await response.blob();
+        
+        // Descobre extensão aproximada
+        let ext = 'pdf';
+        if (nota.anexoUrl.includes('.png') || blob.type.includes('png')) ext = 'png';
+        else if (nota.anexoUrl.includes('.jpg') || nota.anexoUrl.includes('.jpeg') || blob.type.includes('jpeg')) ext = 'jpg';
+
+        const cidadeLimpa = nota.cidade.replace(/[^a-zA-Z0-9 -]/g, '').trim();
+        const bmLimpo = nota.bm.replace(/\//g, '-');
+        
+        // Nome: CIDADE - BM.ext
+        zip.file(`${cidadeLimpa} - BM ${bmLimpo}.${ext}`, blob);
+        count++;
+      } catch (e) {
+        console.error('Erro baixar:', nota.cidade, e);
+      }
+    }
+
+    if (count > 0) {
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, `Anexos_BM_${currentBmId.replace('_', '-')}.zip`);
+    } else {
+      alert("Erro ao baixar os arquivos. Verifique se o Firebase Storage está com as regras de CORS configuradas.");
+    }
+  } catch (e) {
+    alert("Erro geral ao gerar ZIP: " + e.message);
+  }
+  
+  txt.textContent = oldTxt;
+  loadingOverlay.style.display = 'none';
 });
 
 fileInputPlanilha.addEventListener('change', (e) => {
