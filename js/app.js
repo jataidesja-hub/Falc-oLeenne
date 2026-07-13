@@ -382,7 +382,13 @@ function renderResumo() {
   notasData.forEach(nota => {
     const isReajuste = nota.cidade.toUpperCase().includes('REAJUSTE') || nota.cidade.toUpperCase().includes('(R)');
     
-    let nomeCidade = nota.cidade.replace(/\s*\(\s*R\s*\)\s*/ig, '').replace(/\s*REAJUSTE\s*/ig, '').trim().toUpperCase();
+    let nomeCidade = nota.cidade.toUpperCase();
+    nomeCidade = nomeCidade.replace(/\(R\)/g, '')
+                           .replace(/REAJUSTE/g, '')
+                           .replace(/[^A-ZÀ-ÖØ-öø-ÿ0-9\s]/g, '') // Remove pontuações e símbolos
+                           .replace(/\s+R$/g, '') // Remove " R" solto no final
+                           .trim();
+                           
     if (!nomeCidade) nomeCidade = 'DESCONHECIDA';
     
     if (!agrupado[nomeCidade]) {
@@ -415,7 +421,7 @@ function renderResumo() {
   resumoTbody.innerHTML = linhas.map(row => `
     <!-- CITY HEADER -->
     <tr class="bg-black/30 border-b border-white/5">
-      <td colspan="6" class="px-6 py-3 text-center font-bold text-zinc-200 uppercase tracking-widest text-[13px]">${row.cidade.split(' ')[0]}</td>
+      <td colspan="6" class="px-6 py-3 text-center font-bold text-zinc-200 uppercase tracking-widest text-[13px]">${row.cidade}</td>
     </tr>
     <!-- DATA -->
     <tr class="hover:bg-white/[0.02] transition-colors border-b border-white/10 last:border-0">
