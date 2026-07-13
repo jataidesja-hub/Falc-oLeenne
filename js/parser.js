@@ -30,7 +30,7 @@ function parsePlanilha(workbook) {
   }
 
   function extrairCidade(texto) {
-    const m = texto.match(/NA CIDADE DE ([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÀÜÇ\s]+?)(?:,|\.|$)/i);
+    const m = texto.match(/NA CIDADE DE\s+([^,.]+)/i);
     return m ? m[1].trim() : null;
   }
 
@@ -48,8 +48,11 @@ function parsePlanilha(workbook) {
     }
 
     if (linha.toUpperCase().includes('REFERENTE AO PAGAMENTO') || linha.toUpperCase().includes('NA CIDADE DE')) {
-      const cidade = extrairCidade(linha.toUpperCase());
+      let cidade = extrairCidade(linha.toUpperCase());
       if (cidade) {
+        if (linha.toUpperCase().includes('REAJUSTE')) {
+          cidade += ' (REAJUSTE)';
+        }
         if (bloco) blocos.push(bloco);
         bloco = {
           cidade,
