@@ -238,8 +238,7 @@ function renderCards() {
             <div class="space-y-3">
               ${nota.referencia ? `
                 <div>
-                  <p class="text-xs text-zinc-400 leading-relaxed line-clamp-3">${formatDescription(nota.referencia)}</p>
-                  <button class="btn-ver-mais text-[10px] font-medium text-violet-400 hover:text-violet-300 mt-1 uppercase tracking-wider" onclick="toggleReadMore(this)">Ler mais</button>
+                  <p class="text-xs text-zinc-400 leading-relaxed">${formatDescription(nota.referencia)}</p>
                 </div>
               ` : ''}
               ${nota.in ? `<p class="text-[11px] font-medium text-amber-500/80 leading-snug">${formatDescription(nota.in)}</p>` : ''}
